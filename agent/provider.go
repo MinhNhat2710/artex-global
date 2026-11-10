@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Autumn-27/artex/llmrec"
+	"github.com/Autumn-27/artex/windsurf"
 	"github.com/Autumn-27/norma/agentcore"
 	"github.com/Autumn-27/norma/compaction"
 	"github.com/Autumn-27/norma/llm"
@@ -98,6 +99,10 @@ type RetryConfig struct {
 	StreamAttempts int
 	StreamInterval time.Duration
 }
+
+// FormatWindsurf is the Devin/Windsurf Connect protocol, handled by the
+// artex-local windsurf package (not part of norma).
+const FormatWindsurf llm.Format = "windsurf"
 
 // compaction window resolution bounds (in K tokens). Below the floor the
 // threshold math (window − summary reserve − buffer) would go non-positive and
@@ -218,6 +223,11 @@ func ConfigFrom(provider, model, baseURL, apiKey, proxy string) Config {
 		if c.Model == "" {
 			c.Model = "gpt-5"
 		}
+	case "windsurf":
+		c.Format = FormatWindsurf
+		if c.Model == "" {
+			c.Model = "swe-2-high"
+		}
 	default:
 		c.Format = llm.FormatAnthropic
 		// provider appends "/v1/messages".
@@ -239,13 +249,15 @@ func isFalsy(s string) bool {
 	return false
 }
 
-// Provider returns the short provider name ("anthropic"/"openai").
+// Provider returns the short provider name ("anthropic"/"openai"/"windsurf").
 func (c Config) Provider() string {
 	switch c.Format {
 	case llm.FormatOpenAI:
 		return "openai"
 	case llm.FormatOpenAIResponses:
 		return "openai-responses"
+	case FormatWindsurf:
+		return "windsurf"
 	}
 	return "anthropic"
 }
@@ -258,6 +270,17 @@ func (c Config) NewProvider() (llm.Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Windsurf uses its own Connect protocol, not norma's built-in formats.
+	if c.Format == FormatWindsurf {
+		return windsurf.NewProvider(windsurf.Config{
+			BaseURL:    c.BaseURL,
+			APIKey:     c.APIKey,
+			Model:      c.Model,
+			HTTPClient: client,
+		})
+	}
+
 	lc := llm.Config{
 		Format:     c.Format,
 		BaseURL:    c.BaseURL,

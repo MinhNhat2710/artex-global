@@ -260,7 +260,7 @@ function ProfileSheet({
   const t = useTranslations("llmPage");
   const isNew = !profile;
   const [name, setName] = React.useState("");
-  const [format, setFormat] = React.useState<"anthropic" | "openai" | "openai-responses">("anthropic");
+  const [format, setFormat] = React.useState<"anthropic" | "openai" | "openai-responses" | "windsurf">("anthropic");
   const [model, setModel] = React.useState("");
   const [baseUrl, setBaseUrl] = React.useState("");
   const [proxy, setProxy] = React.useState("");
@@ -308,7 +308,7 @@ function ProfileSheet({
   React.useEffect(() => {
     if (!open) return;
     setName(profile?.name ?? "");
-    setFormat(profile?.format === "openai" || profile?.format === "openai-responses" ? profile.format : "anthropic");
+    setFormat(profile?.format === "openai" || profile?.format === "openai-responses" || profile?.format === "windsurf" ? profile.format : "anthropic");
     setModel(profile?.model ?? "");
     setBaseUrl(profile?.base_url ?? "");
     setProxy(profile?.proxy ?? "");
@@ -456,7 +456,7 @@ function ProfileSheet({
             </div>
             <div className="grid gap-2">
               <Label>{t("profile.format.label")}</Label>
-              <Select value={format} onValueChange={(v) => setFormat(v as "anthropic" | "openai" | "openai-responses")}>
+              <Select value={format} onValueChange={(v) => setFormat(v as "anthropic" | "openai" | "openai-responses" | "windsurf")}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("profile.format.placeholder")} />
                 </SelectTrigger>
@@ -464,6 +464,7 @@ function ProfileSheet({
                   <SelectItem value="anthropic">Anthropic</SelectItem>
                   <SelectItem value="openai">OpenAI (Chat Completions)</SelectItem>
                   <SelectItem value="openai-responses">OpenAI (Responses API)</SelectItem>
+                  <SelectItem value="windsurf">Windsurf (Devin SWE-2)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
